@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"bookcollection.com/rest-api/properties"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -33,16 +34,18 @@ type ComicBook struct {
 
 var DB *sql.DB
 
-const mysqlUrl = "root:test@tcp(localhost:3306)/BOOK_COLLECTION?parseTime=true"
-
 var books []Book
 
 var comicBooks []ComicBook
 
 func InitDB() {
-	var err error
+	username := properties.GetProperty("username")
+	password := properties.GetProperty("password")
+	host := properties.GetProperty("host")
+	port := properties.GetProperty("port")
 
-	DB, err = sql.Open("mysql", mysqlUrl)
+	var err error
+	DB, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/BOOK_COLLECTION?parseTime=true", username, password, host, port))
 
 	if err != nil {
 		panic("Could not connect to db!!!")
