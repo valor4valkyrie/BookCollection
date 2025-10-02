@@ -11,3 +11,7 @@ Application settings are stored in the `properties.yaml` file. Located in the `p
     - port:
     - username:
     - password:
+
+## Dockerfile
+A Dockerfile is provided to build the application and have it run successfully. However, the application alone will not 
+run completely as there is no database connection.
