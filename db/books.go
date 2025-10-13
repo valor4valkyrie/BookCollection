@@ -1,12 +1,11 @@
 package db
 
 import (
+	"bookcollection.com/rest-api/properties"
 	"database/sql"
 	"fmt"
-	"time"
-
-	"bookcollection.com/rest-api/properties"
 	_ "github.com/go-sql-driver/mysql"
+	"time"
 )
 
 type Book struct {
