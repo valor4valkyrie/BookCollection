@@ -1,11 +1,14 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
+	_ "bookcollection.com/rest-api/db"
+	"github.com/labstack/echo/v4"
 )
 
-func RegisterRoutes(server *gin.Engine) {
+func RegisterRoutes(e *echo.Echo) {
 
-	server.GET("/books", getTradBooks)
-	server.GET("/books/:ref", getTradBooksByRef)
+	books := e.Group("/books/trad")
+	books.GET("/all", getTradBooks)
+	books.GET("/:ref", getTradBooksByRef)
+	books.PUT("/new", saveBook)
 }

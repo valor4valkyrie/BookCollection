@@ -1,11 +1,13 @@
 package db
 
 import (
-	"bookcollection.com/rest-api/properties"
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"time"
+
+	"bookcollection.com/rest-api/properties"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
 
 type Book struct {
@@ -58,18 +60,18 @@ func InitDB() {
 
 func (b Book) Save() []Book {
 	books = append(books, b)
-	//query := `INSERT INTO trad_books (reference_id, title, pages, author, date_published, isbn, publisher, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)`
-	//stmt, err := DB.Prepare(query)
-	/*defer DB.Close()
+	uuid := uuid.New()
+	query := `INSERT INTO trad_books (reference_id, title, pages, author, date_published, isbn, publisher, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	stmt, err := DB.Prepare(query)
+	defer DB.Close()
 	if err != nil {
 		panic(err)
 	}
 
-	stmt.Exec(b.ReferenceId, b.Title, b.Pages, b.Author, b.DatePublished, b.Isbn, b.Publisher, b.ImageUrl)
+	stmt.Exec(uuid, b.Title, b.Pages, b.Author, b.DatePublished, b.Isbn, b.Publisher, b.ImageUrl)
 
 	books = append(books, b)
-	fmt.Println("Book saved")*/
-	fmt.Println(books)
+
 	return books
 }
 
