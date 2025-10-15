@@ -63,7 +63,7 @@ func (b Book) Save() []Book {
 	uuid := uuid.New()
 	query := `INSERT INTO trad_books (reference_id, title, pages, author, date_published, isbn, publisher, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 	stmt, err := DB.Prepare(query)
-	defer DB.Close()
+
 	if err != nil {
 		panic(err)
 	}
