@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log"
 	"net/http"
 
 	"bookcollection.com/rest-api/db"
@@ -31,8 +32,12 @@ func saveBook(c echo.Context) error {
 		return err
 	}
 
-	//TODO: Validation coming soon
+	saved, err := book.Save()
 
-	book.Save()
+	if err != nil {
+		return c.Redirect(http.StatusInternalServerError, "Error:"+err.Error())
+	}
+
+	log.Println(saved)
 	return nil
 }

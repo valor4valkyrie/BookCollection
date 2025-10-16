@@ -11,5 +11,5 @@ func main() {
 	e := echo.New()
 	e.Server.Addr = ":8080"
 	routes.RegisterRoutes(e)
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Info(e.Start(":8080"))
 }

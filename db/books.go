@@ -3,35 +3,43 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"bookcollection.com/rest-api/properties"
+	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 )
 
-type Book struct {
-	id            int
-	ReferenceId   string
-	Title         string
-	Pages         int
-	Author        string
-	DatePublished time.Time
-	Isbn          int
-	Publisher     string
-	ImageUrl      string
-	Read          bool
-}
+type (
+	Book struct {
+		id            int
+		ReferenceId   string    `json:"reference" validate:"required"`
+		Title         string    `json:"title" validate:"required,max=100"`
+		Pages         int       `json:"pages" validate:"required,max=4"`
+		Author        string    `json:"author"`
+		DatePublished time.Time `json:"date_published"`
+		Isbn          int       `json:"isbn"`
+		Publisher     string    `json:"publisher"`
+		ImageUrl      string    `json:"image_url"`
+		Read          bool      `json:"read"`
+	}
+)
 
-type ComicBook struct {
-	storageBox string
-	sold       time.Time
-	borrowed   time.Time
-	borrowedBy string
-	isForSale  bool
-	saleURL    string
-	Book
-}
+// use a single instance of Validate, it caches struct info
+var validate *validator.Validate
+
+type (
+	ComicBook struct {
+		StorageBox string    `json:"storage box" validate:"required"`
+		SoldDate   time.Time `json:"sold date"`
+		Borrowed   time.Time `json:"borrowed date"`
+		BorrowedBy string    `json:"borrowed by"`
+		SaleURL    string    `json:"sale url"`
+		Book
+	}
+)
 
 var DB *sql.DB
 
@@ -48,31 +56,48 @@ func InitDB() {
 	var err error
 	DB, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/BOOK_COLLECTION?parseTime=true", username, password, host, port))
 
+	err = DB.Ping()
+
 	if err != nil {
-		panic("Could not connect to db!!!")
+		log.Fatalf("Could not connect to db!!!: %s", err.Error())
 	}
 
-	fmt.Println("Connected to db")
+	log.Println("Connected to db")
 
 	DB.SetMaxOpenConns(10)
 	DB.SetMaxIdleConns(5)
 }
 
-func (b Book) Save() []Book {
+func (b Book) Save() ([]Book, error) {
+	validate = validator.New()
+	err := validate.Struct(b)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
 	books = append(books, b)
 	uuid := uuid.New()
 	query := `INSERT INTO trad_books (reference_id, title, pages, author, date_published, isbn, publisher, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 	stmt, err := DB.Prepare(query)
 
 	if err != nil {
-		panic(err)
+		log.Printf("Could not prepare statement: %s", err.Error())
+		return nil, err
 	}
 
-	stmt.Exec(uuid, b.Title, b.Pages, b.Author, b.DatePublished, b.Isbn, b.Publisher, b.ImageUrl)
+	exec, err := stmt.Exec(uuid, b.Title, b.Pages, b.Author, b.DatePublished, b.Isbn, b.Publisher, b.ImageUrl)
+	if err != nil {
+		log.Printf("Error saving Book: %s", err.Error())
+		return nil, err
+	}
+
+	log.Println(exec)
 
 	books = append(books, b)
 
-	return books
+	return books, nil
 }
 
 func GetAllTradBooks() ([]Book, error) {
@@ -80,9 +105,8 @@ func GetAllTradBooks() ([]Book, error) {
 
 	rows, err := DB.Query(query)
 
-	defer rows.Close()
-
 	if err != nil {
+		fmt.Printf("Failed to query db: %s", err.Error())
 		return nil, err
 	}
 
@@ -108,10 +132,9 @@ func GetTradBooksByReference(ref string) ([]Book, error) {
 	rows, err := DB.Query(query, ref)
 
 	if err != nil {
+		log.Printf("Failed to query db: %s", err.Error())
 		return nil, err
 	}
-
-	defer rows.Close()
 
 	var books []Book
 
