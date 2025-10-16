@@ -23,7 +23,9 @@ type (
 		Isbn          int       `json:"isbn"`
 		Publisher     string    `json:"publisher"`
 		ImageUrl      string    `json:"image_url"`
-		Read          bool      `json:"read"`
+		Borrowed      time.Time `json:"borrowed date"`
+		BorrowedBy    string    `json:"borrowed by"`
+		Read          time.Time `json:"read"`
 	}
 )
 
@@ -34,8 +36,6 @@ type (
 	ComicBook struct {
 		StorageBox string    `json:"storage box" validate:"required"`
 		SoldDate   time.Time `json:"sold date"`
-		Borrowed   time.Time `json:"borrowed date"`
-		BorrowedBy string    `json:"borrowed by"`
 		SaleURL    string    `json:"sale url"`
 		Book
 	}
@@ -73,7 +73,12 @@ func (b Book) Save() ([]Book, error) {
 	err := validate.Struct(b)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		return nil, err
+	}
+
+	if b.ValidateBookStatus() != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -150,4 +155,20 @@ func GetTradBooksByReference(ref string) ([]Book, error) {
 	}
 
 	return books, nil
+}
+
+func (b Book) ValidateBookStatus() error {
+	if b.DatePublished.After(b.Read) {
+		return fmt.Errorf("%s cannot be Read before the book was Published", b.Title)
+	}
+
+	return nil
+}
+
+func (b ComicBook) ValidateComicBookStatus() error {
+	if !b.Borrowed.IsZero() && (!b.SoldDate.IsZero() || b.SaleURL != "") {
+		return fmt.Errorf("%s cannot be Borrowed while having a Sold status or have a Sale URL for a pending sale", b.Title)
+	}
+
+	return nil
 }
