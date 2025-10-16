@@ -56,7 +56,7 @@ func TestBookReadBeforePublished(t *testing.T) {
 
 	err := book.ValidateBookStatus()
 
-	if err == nil || err.Error() != fmt.Sprintf("%s cannot be Read before the book was Published", book.Title) {
+	if err != nil || err.Error() != fmt.Sprintf("%s cannot be Read before the book was Published", book.Title) {
 		t.Error("Missing or incorrect error for this book status, Expected Published/Read error: ", err)
 	}
 }
