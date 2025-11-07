@@ -5,13 +5,12 @@ This is a simple book collection app written in Go that tracks books that I have
 lent to others. Only a backend service is provided. Making this essentially a Restful CRUD API.
 
 ## Application Settings
-Application settings are stored in the `properties.yaml` file. Located in the context of the application. The current 
-settings are:
-- db:
-    - host:
-    - port:
-    - username:
-    - password:
+Application settings are stored in the `application.properties` file. Located in the context of the application. The 
+current settings are:
+- db.host=
+- db.port=
+- db.username=
+- db.password=
 
 ## Dockerfile
 A Dockerfile is provided to build the application and have it run successfully. However, the application alone will not 
