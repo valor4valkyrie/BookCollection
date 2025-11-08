@@ -11,4 +11,5 @@ func RegisterRoutes(e *echo.Echo) {
 	books.GET("/all", getTradBooks)
 	books.GET("/:ref", getTradBooksByRef)
 	books.PUT("/new", saveBook)
+	books.PUT("/scan/:isbn", scanBook)
 }

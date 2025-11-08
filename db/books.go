@@ -3,7 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"time"
 
 	"bookcollection.com/rest-api/properties"
@@ -48,10 +50,12 @@ var books []Book
 var comicBooks []ComicBook
 
 func InitDB() {
-	username := properties.GetProperty("username")
-	password := properties.GetProperty("password")
-	host := properties.GetProperty("host")
-	port := properties.GetProperty("port")
+	username := properties.GetProperty("db.username")
+	password := properties.GetProperty("db.password")
+	host := properties.GetProperty("db.host")
+	port := properties.GetProperty("db.port")
+
+	fmt.Println(username, password, host, port)
 
 	var err error
 	DB, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/BOOK_COLLECTION?parseTime=true", username, password, host, port))
@@ -171,4 +175,30 @@ func (b ComicBook) ValidateComicBookStatus() error {
 	}
 
 	return nil
+}
+
+func ScanBook(isbn int) ([]byte, error) {
+	searchUrl := properties.GetProperty("search.api.search-url")
+	key := properties.GetProperty("search.api.key")
+	searchEngine := properties.GetProperty("search.api.engine")
+	retrieve, err := http.Get(fmt.Sprintf("%s?key=%s&cx=%s&c2coff=1&q=%d", searchUrl, key, searchEngine, isbn))
+
+	if err != nil {
+		fmt.Printf("Error performing search request to search engine: %s", err.Error())
+		return nil, fmt.Errorf("Error retrieving book from search: %s", retrieve.StatusCode)
+	}
+
+	if retrieve.StatusCode != 200 {
+		log.Printf("Non 200 response for book search: %s", retrieve.StatusCode)
+		return nil, fmt.Errorf("Error retrieving book from search: %s", retrieve.StatusCode)
+	}
+
+	body, err := io.ReadAll(retrieve.Body)
+
+	if err != nil {
+		log.Printf("Error converting response body to JSON: %s", err.Error())
+		return nil, fmt.Errorf("Error retrieving book from search: %s", retrieve.StatusCode)
+	}
+
+	return body, nil
 }
